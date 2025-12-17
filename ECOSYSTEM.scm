@@ -6,7 +6,7 @@
   (version "1.0.0")
   (name "robot-repo-bot")
   (type "project")
-  (purpose "Jonathan D.A. Jewell <jonathan.jewell@gmail.com>")
+  (purpose "Guix channel and repository infrastructure")
 
   (position-in-ecosystem
     "Part of hyperpolymath ecosystem. Follows RSR guidelines.")
@@ -16,5 +16,5 @@
              (url "https://github.com/hyperpolymath/rhodium-standard-repositories")
              (relationship "standard")))
 
-  (what-this-is "Jonathan D.A. Jewell <jonathan.jewell@gmail.com>")
+  (what-this-is "Guix channel providing reproducible infrastructure packages")
   (what-this-is-not "- NOT exempt from RSR compliance"))
