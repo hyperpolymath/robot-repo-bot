@@ -1,0 +1,27 @@
+project Robot is
+
+   for Source_Dirs use (".");
+   for Object_Dir use "../../obj/coordinator";
+   for Exec_Dir use "../../bin";
+   for Main use ("main.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use (
+         "-gnat12",       -- Ada 2012 standard
+         "-gnata",        -- Enable assertions
+         "-gnato",        -- Enable overflow checks
+         "-gnatwa",       -- Enable all warnings
+         "-gnatQ"         -- Don't quit on error (for IDE support)
+      );
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-Es"); -- Store tracebacks in exception occurrences
+   end Binder;
+
+   package Linker is
+      -- Static linking for portability across Linux/Minix/BSD
+      for Switches ("Ada") use ("-static"); 
+   end Linker;
+
+end Robot;
