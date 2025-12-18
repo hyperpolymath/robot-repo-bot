@@ -1,148 +1,124 @@
-= Robot Repo Bot
+= IndieWeb2 Bastion (RSR)
 :doctype: book
+:toc: left
+:toclevels: 3
 :icons: font
 :source-highlighter: rouge
-:toc: left
-:toclevels: 2
 :sectnums:
-:sectnumlevels: 2
 :author: Hyperpolymath
-:revnumber: 2.0.0-rsr
-:revdate: 2025-10-13
+:revnumber: 1.0.0-rsr
+:revdate: 2025-12-18
 
 [abstract]
-.Rhodium Standard Compliance
-The **Robot Repo Bot** is an autonomous infrastructure agent designed to enforce **Rhodium Standard (RSR)** compliance across distributed repositories. Unlike passive linters, the Robot actively "heals" the filesystem using SaltStack, ensuring directory integrity, permission strictness, and hygiene without human intervention.
+.Rhodium Standard Release
+The **IndieWeb2 Bastion** is a high-assurance ingress gateway designed for the post-cloud era. It serves as the secure "Gatehouse" for a self-hosted Service Mesh, implementing **TLS 1.3**, **HTTP/3 (QUIC)**, and **Encrypted Client Hello (ECH)** by default. It orchestrates a pod of sidecars including **IPFS**, **Cadre Router**, and **Poly-MCPs** (Model Context Protocols).
 
 ---
 
-== 1. Overview
+== 1. Architecture
 
-The Robot acts as the **local state enforcer** for your project. It is written in Python and leverages `salt-call --local` to apply idempotent state transformations.
-
-=== Core Capabilities
-* **Directory Skeletal Enforcement:** Ensures required paths (`config/`, `dist/`, `internal/`) exist.
-* **Permission Guarding:** Enforces `0755` on scripts and `0600` on secrets.
-* **Entropy Pruning:** Automatically strips trailing whitespace and enforces EOF newlines.
-* **Git Hook Integration:** Acts as a `pre-commit` gatekeeper.
-
-== 2. Installation
-
-The Robot is designed to be installed as a **Git Submodule** or a **PIPX** tool.
-
-=== Option A: Submodule (Recommended)
-Add the Robot to your project's `maintenance/` directory:
-
-[source,bash]
-----
-git submodule add https://gitlab.com/hyperpolymath/robot-repo-bot.git maintenance/robot
-----
-
-=== Option B: Standalone
-[source,bash]
-----
-pip install --user git+https://gitlab.com/hyperpolymath/robot-repo-bot.git
-----
-
-== 3. Transacting with the Robot
-
-The Robot exposes a CLI interface for three distinct modes of operation.
-
-=== Mode 1: The Healer (Fix)
-Directly applies the Rhodium state to the current repository. This will modify files.
-
-[source,bash]
-----
-# Run via Justfile (Preferred)
-just robot
-
-# Direct Invocation
-python3 maintenance/robot/main.py fix
-----
-
-=== Mode 2: The Auditor (Check)
-Performs a dry-run. Returns `exit 0` if compliant, `exit 1` if violations are found. Used in CI/CD.
-
-[source,bash]
-----
-python3 maintenance/robot/main.py check
-----
-
-=== Mode 3: The Watchman (Daemon)
-Monitors the filesystem for changes and reverts unauthorized modifications instantly.
-
-[source,bash]
-----
-python3 maintenance/robot/main.py watch
-----
-
-== 4. Configuration
-
-The Robot looks for a `robot.toml` in the repository root. If missing, it applies the **Strict Default RSR Policy**.
-
-.Example `robot.toml`
-[source,toml]
-----
-[core]
-strict_mode = true
-
-[filesystem]
-# Directories that MUST exist
-required_dirs = [
-  "config",
-  "internal/cadre",
-  "dist"
-]
-
-# Files that must strictly be executable
-executables = [
-  "just",
-  "scripts/**/*.sh"
-]
-
-[salt]
-# Custom salt state modules
-state_root = "./maintenance/states"
-----
-
-== 5. Architecture
-
-The Robot uses a hexagonal architecture to separate the *Policy* (RSR Rules) from the *Actuator* (SaltStack).
+The Bastion does not run in isolation. It is deployed as a **Podman Pod** (`indieweb2-pod`) sharing a single network namespace on **Port 443**.
 
 [plantuml, architecture, png]
 ....
 @startuml
 skinparam monochrome true
 
-actor "User / CI" as User
-component "Robot CLI" as CLI
-component "Policy Engine" as Policy
-component "SaltStack Local" as Salt
-database "Filesystem" as FS
+actor "User / AI Agent" as User
+package "IndieWeb2 Pod (Port 443)" {
+  component "Bastion (Gateway)" as Bastion
+  component "Cadre Router" as Router
+  component "IPFS Node" as IPFS
+  component "Poly-MCPs" as MCPs
+}
 
-User -> CLI : Transact (Fix/Check)
-CLI -> Policy : Load Rules (robot.toml)
-Policy -> Salt : Compile State
-Salt -> FS : Enforce State (Idempotent)
-FS -> Salt : Return Diff
-Salt -> CLI : Report Status
+User -> Bastion : HTTPS/3 (QUIC)
+Bastion -> Router : HTTP (localhost:3000)
+Bastion -> IPFS : HTTP (localhost:8080)
+Bastion -> MCPs : SSE (localhost:3001+)
 @enduml
 ....
 
-== 6. Legal & Philosophical Manifesto
+* **The Gateway (Bastion):** Written in **ReScript/Deno**. Handles auth, TLS termination, and traffic routing.
+* **The Brain (Cadre):** Service mesh router for internal logic.
+* **The Storage (IPFS):** Decentralized pinning and retrieval.
+* **The Coordinator (Robot):** Written in **Ada/SPARK**. Formally verified repository maintenance.
 
-This software is an instrument of the **Manifesto for a Better Web**. It is strictly governed to ensure user sovereignty, provenance, and freedom.
+== 2. Prerequisites
 
-=== The License Triad
-Users may choose to transact with this software under **one** of the following strictly defined terms:
+The system adheres to the **Rhodium Standard** (RSR) and requires specific tooling:
 
-1.  **The Freedom Path (MIT):** For maximum permissiveness and integration.
-2.  **The Copyleft Path (AGPLv3):** For those contributing back to the commons.
+* **OS:** Linux (Wolfi/Alpine preferred), macOS, or Minix.
+* **Container Engine:** Podman (Rootless preferred).
+* **Orchestrator:** `just` (Command Runner).
+* **Languages:** Deno, ReScript, Nickel, GNAT (Ada).
 
-**IN ADDITION**, the **Palimpsest License (v0.8)** is strictly enforced regarding the use of this codebase in AI Training sets.
-> _"Data provenance is dignity. You may not ingest this code into a stochastic model without retaining the specific attribution and reversible history of its authors."_
+== 3. Quick Start
 
-By using this tool, you acknowledge that Audit-Grade infrastructure is a human right, not a luxury.
+We use a **Modular Registry** architecture. All commands are run via `just`.
 
-* **Maintainer:** Jonathan D.A. Jewell (hyperpolymath)
-* **Standard:** Rhodium (RSR)
+=== Step 1: Bootstrap & Crypto
+Initialize the environment and weave the cryptographic material (Ed448/SHA-512).
+
+[source,bash]
+----
+just bootstrap
+just certs
+----
+
+=== Step 2: Build the Stack
+Compiles the ReScript Gateway, builds the Ada Coordinator, and assembles the Wolfi containers.
+
+[source,bash]
+----
+just build
+----
+
+=== Step 3: Deploy
+Launches the full `indieweb2-pod` on Port 443.
+
+[source,bash]
+----
+just deploy
+----
+
+_System is now online at `https://localhost`._
+
+== 4. Operational Control
+
+=== The Robot Coordinator (Ada/SPARK)
+We do not manage the repository manually. We commission the **Robot** to enforce state. The Coordinator is formally verified to prevent unsafe operations.
+
+[source,bash]
+----
+just ui
+----
+* **Audit Level:** Select `Forensic` for deep inspection.
+* **Repair Mode:** Select `Ruthless` to force compliance (blocked in Forensic mode).
+
+=== Model Context Protocols (MCP)
+To connect your AI (Claude/Agent) to this repo:
+* **Git Access:** `https://localhost/mcp/git`
+* **Filesystem:** `https://localhost/mcp/fs`
+
+== 5. Directory Structure
+
+[source,text]
+----
+/
+├── config/              # Nickel Policy Contracts (*.ncl)
+├── container/           # Wolfi Container Definitions
+├── internal/            # Sidecar Data (IPFS/Cadre/MCPs)
+├── maintenance/         # The Robot & Crypto Loom
+├── modules/             # Justfile Modular Registry (*.just)
+├── src/
+│   ├── coordinator/     # Ada/SPARK TUI Source
+│   └── scripts/         # ReScript Gateway Source
+└── Justfile             # Master Controller
+----
+
+== 6. License & Compliance
+
+* **License:** Dual MIT / AGPLv3 (User Choice).
+* **AI Training:** Strictly governed by the **Palimpsest License v0.8**.
+* **Standard:** Rhodium (RSR) Certified.
