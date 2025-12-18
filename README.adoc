@@ -1,124 +1,129 @@
-= IndieWeb2 Bastion (RSR)
+= Robot Repo Bot (RSR)
 :doctype: book
-:toc: left
-:toclevels: 3
 :icons: font
 :source-highlighter: rouge
+:toc: left
+:toclevels: 3
 :sectnums:
 :author: Hyperpolymath
-:revnumber: 1.0.0-rsr
+:revnumber: 2.1.0-spark
 :revdate: 2025-12-18
 
 [abstract]
-.Rhodium Standard Release
-The **IndieWeb2 Bastion** is a high-assurance ingress gateway designed for the post-cloud era. It serves as the secure "Gatehouse" for a self-hosted Service Mesh, implementing **TLS 1.3**, **HTTP/3 (QUIC)**, and **Encrypted Client Hello (ECH)** by default. It orchestrates a pod of sidecars including **IPFS**, **Cadre Router**, and **Poly-MCPs** (Model Context Protocols).
+.Rhodium Standard Compliance
+The **Robot Repo Bot** is an autonomous infrastructure agent designed to enforce **Rhodium Standard (RSR)** compliance across distributed repositories. Unlike passive linters, the Robot actively "heals" the filesystem using SaltStack, ensured by a formally verified **Ada/SPARK** control plane.
 
 ---
 
 == 1. Architecture
 
-The Bastion does not run in isolation. It is deployed as a **Podman Pod** (`indieweb2-pod`) sharing a single network namespace on **Port 443**.
+The Robot operates on a **Hexagonal Architecture**, separating the Safety Logic from the Execution Engine.
 
-[plantuml, architecture, png]
+[plantuml, robot_arch, png]
 ....
 @startuml
 skinparam monochrome true
-
-actor "User / AI Agent" as User
-package "IndieWeb2 Pod (Port 443)" {
-  component "Bastion (Gateway)" as Bastion
-  component "Cadre Router" as Router
-  component "IPFS Node" as IPFS
-  component "Poly-MCPs" as MCPs
+package "Control Plane (The Brain)" {
+  [Ada/SPARK Coordinator] as Ada
+  note right: Formally Verified\nState Safety
 }
+package "Execution Plane (The Muscle)" {
+  [Python Engine] as Python
+  [SaltStack Local] as Salt
+}
+database "Filesystem" as FS
 
-User -> Bastion : HTTPS/3 (QUIC)
-Bastion -> Router : HTTP (localhost:3000)
-Bastion -> IPFS : HTTP (localhost:8080)
-Bastion -> MCPs : SSE (localhost:3001+)
+User -> Ada : "Repair Ruthlessly"
+Ada -> Ada : Check Safety Contract\n(Is_Safe?)
+Ada -> Python : Dispatch Valid Command
+Python -> Salt : Apply State
+Salt -> FS : Enforce Permissions/Structure
 @enduml
 ....
 
-* **The Gateway (Bastion):** Written in **ReScript/Deno**. Handles auth, TLS termination, and traffic routing.
-* **The Brain (Cadre):** Service mesh router for internal logic.
-* **The Storage (IPFS):** Decentralized pinning and retrieval.
-* **The Coordinator (Robot):** Written in **Ada/SPARK**. Formally verified repository maintenance.
+* **The Coordinator (Ada/SPARK):** A TUI that mathematically prevents unsafe state transitions (e.g., destructive repairs during a forensic audit).
+* **The Engine (Python):** A dynamic runtime that calculates permutations and parses the `robot.toml` policy.
+* **The Actuator (SaltStack):** The idempotent engine that physically touches the disk.
 
-== 2. Prerequisites
+== 2. Installation
 
-The system adheres to the **Rhodium Standard** (RSR) and requires specific tooling:
-
-* **OS:** Linux (Wolfi/Alpine preferred), macOS, or Minix.
-* **Container Engine:** Podman (Rootless preferred).
-* **Orchestrator:** `just` (Command Runner).
-* **Languages:** Deno, ReScript, Nickel, GNAT (Ada).
-
-== 3. Quick Start
-
-We use a **Modular Registry** architecture. All commands are run via `just`.
-
-=== Step 1: Bootstrap & Crypto
-Initialize the environment and weave the cryptographic material (Ed448/SHA-512).
+The Robot is designed to be embedded as a **Git Submodule** within RSR-compliant projects (like `indieweb2-bastion`).
 
 [source,bash]
 ----
-just bootstrap
-just certs
+# In your main repo:
+git submodule add https://gitlab.com/hyperpolymath/robot-repo-bot.git maintenance/robot
 ----
 
-=== Step 2: Build the Stack
-Compiles the ReScript Gateway, builds the Ada Coordinator, and assembles the Wolfi containers.
+== 3. Usage: The TUI (Recommended)
 
-[source,bash]
-----
-just build
-----
-
-=== Step 3: Deploy
-Launches the full `indieweb2-pod` on Port 443.
-
-[source,bash]
-----
-just deploy
-----
-
-_System is now online at `https://localhost`._
-
-== 4. Operational Control
-
-=== The Robot Coordinator (Ada/SPARK)
-We do not manage the repository manually. We commission the **Robot** to enforce state. The Coordinator is formally verified to prevent unsafe operations.
+The safest way to interact with the Robot is via the High-Assurance TUI.
 
 [source,bash]
 ----
 just ui
 ----
-* **Audit Level:** Select `Forensic` for deep inspection.
-* **Repair Mode:** Select `Ruthless` to force compliance (blocked in Forensic mode).
 
-=== Model Context Protocols (MCP)
-To connect your AI (Claude/Agent) to this repo:
-* **Git Access:** `https://localhost/mcp/git`
-* **Filesystem:** `https://localhost/mcp/fs`
+This launches the Ada binary. You will be presented with a **Combinatoric State Matrix**:
+1.  **Audit Level:** `Quick` | `Deep` | `Forensic`
+2.  **Repair Mode:** `Dry_Run` | `Interactive` | `Ruthless`
+3.  **Scope:** `Config` | `Internal` | `Security` | `Complete`
 
-== 5. Directory Structure
+_Note: The TUI will physically disable the "Execute" button if you select a forbidden combination (e.g., Forensic + Ruthless)._
 
-[source,text]
+== 4. Usage: The Permutative CLI (Advanced)
+
+For CI/CD or advanced scripting, you may invoke the Python engine directly using the **Assertion Syntax**.
+
+[source,bash]
 ----
-/
-├── config/              # Nickel Policy Contracts (*.ncl)
-├── container/           # Wolfi Container Definitions
-├── internal/            # Sidecar Data (IPFS/Cadre/MCPs)
-├── maintenance/         # The Robot & Crypto Loom
-├── modules/             # Justfile Modular Registry (*.just)
-├── src/
-│   ├── coordinator/     # Ada/SPARK TUI Source
-│   └── scripts/         # ReScript Gateway Source
-└── Justfile             # Master Controller
+# Syntax:
+# robot assert [state] where [condition] scope [target]
+
+# Examples:
+robot assert compliant where strictness=high scope crypto
+robot assert clean where strategy=ruthless scope internal/ipfs
 ----
 
-== 6. License & Compliance
+=== Combinatoric Permutations
+To test for dependency race conditions, the Robot can run a Monte Carlo simulation of state application:
 
-* **License:** Dual MIT / AGPLv3 (User Choice).
-* **AI Training:** Strictly governed by the **Palimpsest License v0.8**.
-* **Standard:** Rhodium (RSR) Certified.
+[source,bash]
+----
+robot audit permutations --count 100
+----
+
+== 5. Configuration (`robot.toml`)
+
+The Robot looks for a `robot.toml` in the repository root.
+
+[source,toml]
+----
+[core]
+strict_mode = true
+
+[filesystem]
+# Directories that MUST exist (Skeletal Integrity)
+required_dirs = ["config", "internal/cadre", "dist"]
+
+# Files that must strictly be executable (0755)
+executables = ["just", "scripts/**/*.sh"]
+
+# Files that must be locked down (0600)
+secrets = ["certs/**/*.pem", ".env"]
+----
+
+== 6. Legal & Philosophical Manifesto
+
+This software is an instrument of the **Manifesto for a Better Web**.
+
+=== The License Triad
+Users may choose to transact with this software under **one** of the following terms:
+
+1.  **The Freedom Path (MIT):** For maximum permissiveness.
+2.  **The Copyleft Path (AGPLv3):** For contributing back to the commons.
+
+**IN ADDITION**, the **Palimpsest License (v0.8)** is strictly enforced:
+> _"Data provenance is dignity. You may not ingest this code into a stochastic model without retaining the specific attribution and reversible history of its authors."_
+
+By using this tool, you acknowledge that Audit-Grade infrastructure is a human right.
